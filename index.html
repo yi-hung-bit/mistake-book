@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大觀念錯題本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="katex/katex.min.css">
+<script src="katex/katex.min.js"></script>
+<script src="katex/auto-render.min.js"></script>
+<script src="curriculum.js"></script>
+<style>
+/* 版面概念：手機優先的錯題 App。底部分頁＋中央「拍錯題」大按鈕；卡片沿用三層色（觀念藍／題目綠／記憶點琥珀） */
+:root{
+  --paper:#f2f1ec;
+  --card:#ffffff;
+  --ink:#1c2433;
+  --muted:#5d6577;
+  --line:#dedbd1;
+  --concept:#2f3f9e; --concept-bg:#eef0fb;
+  --question:#0f766e; --question-bg:#e8f5f2;
+  --memory:#9a5b00; --memory-bg:#fdf5e4;
+  --bad:#c0262d; --bad-bg:#fdecec;
+  --good:#15803d; --good-bg:#e7f6ec;
+  --font-body:'Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  --nav-h:64px;
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:var(--font-body);color:var(--ink);background:var(--paper);line-height:1.6;font-size:15px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--concept);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.hidden{display:none !important}
+.rich strong{background:#fff2b3;padding:0 3px;border-radius:3px}
+.muted{color:var(--muted)}
+
+/* ---------- 頂部 ---------- */
+.top{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff}
+.top-in{max-width:780px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.top h1{font-size:17px;font-weight:900;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sync{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.14);white-space:nowrap}
+.sync.local{background:#7a4800}
+
+.wrap{max-width:780px;margin:0 auto;padding:14px 16px calc(var(--nav-h) + 30px)}
+.notice{border:1.5px dashed #b88a2e;background:#fff8e6;border-radius:12px;padding:9px 12px;font-size:13px;color:#6b4a00;margin-bottom:12px}
+
+/* 統計 */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px}
+.stat b{display:block;font-size:22px;font-weight:900;line-height:1.2;font-family:var(--font-mono)}
+.stat span{font-size:12px;color:var(--muted);font-weight:700}
+.stat.warn b{color:var(--bad)}
+
+.filters{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;overflow-x:auto;flex:1 1 100%;padding-bottom:2px;scrollbar-width:none}
+.chip{white-space:nowrap;padding:5px 12px;border-radius:999px;border:1.5px solid #cbc8bd;background:#fff;font-size:13px;font-weight:700}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.search{flex:1;min-width:0;padding:8px 12px;border:1.5px solid #cbc8bd;border-radius:10px;background:#fff;font-size:16px}
+.toggle{display:inline-flex;gap:5px;align-items:center;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+.toggle input{width:17px;height:17px;accent-color:var(--question)}
+
+/* ---------- 大觀念卡片（可展開） ---------- */
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:14px;box-shadow:4px 4px 0 rgba(28,36,51,.12);overflow:hidden}
+.card-head{width:100%;text-align:left;background:var(--concept-bg);border:0;padding:12px 14px;display:flex;gap:10px;align-items:center}
+.card-head .t{flex:1;min-width:0}
+.card-head h2{font-size:16.5px;font-weight:900;line-height:1.35}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;align-items:center}
+.pill{font-size:11.5px;font-weight:700;padding:1px 8px;border-radius:999px;background:#dfe3fa;color:var(--concept)}
+.pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.good{background:var(--good-bg);color:var(--good)}
+.pill.todo{background:#fff1d6;color:#8a5200}
+.chev{flex:none;font-size:18px;transition:transform .2s;color:var(--concept)}
+.card.open .chev{transform:rotate(90deg)}
+.tier{padding:14px}
+.tier + .tier, .card-head + .tier{border-top:2px solid var(--ink)}
+.tier.concept{background:var(--concept-bg)}
+.tier.memory{background:var(--memory-bg)}
+.tier-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.stamp{font-weight:900;letter-spacing:.08em;border:2px solid currentColor;border-radius:8px;padding:0 8px;font-size:13.5px;background:#fff}
+.s-c{color:var(--concept)} .s-q{color:var(--question)} .s-m{color:var(--memory)}
+.points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.points li{display:flex;gap:9px;background:rgba(255,255,255,.88);border:1px solid #d6dbf5;border-radius:10px;padding:8px 10px;font-size:14.5px}
+.num{flex:none;width:21px;height:21px;border-radius:50%;background:var(--concept);color:#fff;font-size:11.5px;font-weight:900;display:grid;place-items:center;margin-top:2px}
+.mem{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;font-size:14.5px}
+.mem li{display:flex;gap:7px}
+.mem li::before{content:"★";color:#d08a00;font-weight:900}
+.link-btn{border:0;background:transparent;font-size:13px;font-weight:700;color:var(--concept);padding:4px 6px;border-radius:6px}
+.link-btn:hover{background:rgba(47,63,158,.08)}
+.link-btn.danger{color:var(--bad)}
+.card-foot{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;padding:8px 10px;border-top:1px solid var(--line);background:#fafaf7}
+
+/* 題目 */
+.q{border:1.5px solid #e2e0d7;border-radius:12px;padding:12px;background:#fff}
+.q + .q{margin-top:12px}
+.q.mastered{background:#fafaf6}
+.q-top{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:9px}
+.tag{font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:6px;border:1px solid var(--line);background:#f5f4ef}
+.tag.no{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag.wrong{background:var(--bad-bg);color:var(--bad);border-color:#f3c3c5}
+.tag.type{background:#efeafd;color:#5b3fb3;border-color:#d9cff7}
+.tag.warn{background:var(--bad);color:#fff;border-color:var(--bad)}
+.tag.todo{background:#fff1d6;color:#8a5200;border-color:#f0d29c}
+.figs{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.fig{border:1.5px solid #e6e4dc;border-radius:10px;background:#fafaf6;overflow:hidden;text-align:center;min-height:60px}
+.fig img{display:block;width:100%;height:auto;max-height:520px;object-fit:contain;background:#fff;cursor:zoom-in}
+.fig .ph{font-size:12px;color:var(--muted);padding:24px 0}
+.stem{font-size:14.5px;margin-bottom:4px}
+.answer{position:relative;border-radius:10px;background:var(--good-bg);border:1px solid #b8e3c6;padding:9px 12px;margin-top:8px}
+.answer .ans{font-weight:900;color:var(--good)}
+.answer p{margin:3px 0 0;font-size:14px}
+.answer.is-masked{cursor:pointer}
+.answer.is-masked .mc{filter:blur(7px);opacity:.25;pointer-events:none;user-select:none}
+.answer .cover{display:none}
+.answer.is-masked .cover{display:flex;position:absolute;inset:0;align-items:center;justify-content:center;background:rgba(28,36,51,.88);color:#fff;font-weight:700;font-size:13px;border-radius:10px}
+.q-actions{display:flex;flex-wrap:wrap;gap:2px;justify-content:flex-end;margin-top:6px}
+.add-q{margin-top:12px;width:100%;border:2px dashed var(--question);background:var(--question-bg);color:#0b4f4a;border-radius:12px;padding:10px;font-weight:900;font-size:14px}
+
+/* 空狀態 */
+.welcome{background:#fff;border:2px solid var(--ink);border-radius:16px;padding:18px;box-shadow:4px 4px 0 rgba(28,36,51,.12)}
+.welcome h2{font-size:19px;font-weight:900;margin-bottom:10px}
+.welcome ol{margin:0 0 14px;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.empty{text-align:center;color:var(--muted);font-weight:700;padding:34px 0}
+
+/* ---------- 按鈕 ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:12px;border:2px solid var(--ink);background:#fff;font-weight:900;font-size:15px;min-height:44px}
+.btn.primary{background:var(--concept);border-color:var(--concept);color:#fff}
+.btn.green{background:var(--question);border-color:var(--question);color:#fff}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn.ghost{border:1.5px solid var(--line);font-weight:700}
+.btn.block{width:100%}
+.btn.sm{min-height:36px;padding:6px 11px;font-size:13.5px;border-radius:10px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- 底部分頁 ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:2px solid var(--ink);padding-bottom:env(safe-area-inset-bottom)}
+.nav-in{max-width:780px;margin:0 auto;height:var(--nav-h);display:grid;grid-template-columns:1fr 1fr 96px 1fr 1fr;align-items:center}
+.nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11.5px;font-weight:700;color:var(--muted);height:100%}
+.nav button .ic{font-size:20px;line-height:1.1}
+.nav button.on{color:var(--ink)}
+.nav button.on .ic{transform:scale(1.08)}
+.fab{width:76px;height:76px;margin:-30px auto 0;border-radius:50%;background:var(--question) !important;color:#fff !important;border:3px solid var(--ink) !important;box-shadow:0 6px 16px rgba(15,118,110,.35);justify-content:center;font-size:12.5px !important}
+.fab .ic{font-size:26px !important}
+
+/* ---------- 全螢幕面板 ---------- */
+.sheet{position:fixed;inset:0;z-index:50;background:var(--paper);display:flex;flex-direction:column}
+.sheet-h{flex:none;background:var(--ink);color:#fff;display:flex;align-items:center;gap:8px;padding:8px 10px}
+.sheet-h h2{flex:1;font-size:16px;font-weight:900;text-align:center}
+.sheet-h button{border:0;background:transparent;color:#fff;font-weight:700;font-size:15px;padding:8px 10px;border-radius:8px;min-width:64px}
+.sheet-h .save{background:var(--question);color:#fff}
+.sheet-b{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet-in{max-width:720px;margin:0 auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:14px}
+.box{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:12px}
+.box-t{font-size:13px;font-weight:900;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label.f{display:block;font-size:13px;font-weight:700;margin:0 0 4px}
+.req{color:var(--bad)}
+.in{width:100%;padding:10px 12px;border:1.5px solid #cfccc1;border-radius:10px;background:#fff;font-size:16px}
+.in:focus{border-color:var(--concept);outline:none}
+textarea.in{resize:vertical;line-height:1.55}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.hint{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+.preview{margin-top:6px;font-size:14px;background:#f8f8f5;border:1px dashed #cfccc1;border-radius:9px;padding:7px 10px}
+.preview:empty{display:none}
+.choice{display:flex;flex-wrap:wrap;gap:6px}
+.choice button{border:1.5px solid #cbc8bd;background:#fff;border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:700}
+.choice button.on{background:#5b3fb3;border-color:#5b3fb3;color:#fff}
+.photos{display:flex;flex-direction:column;gap:10px}
+.photo{border:1.5px solid #c9e6df;border-radius:12px;background:#fff;overflow:hidden}
+.photo img{display:block;width:100%;max-height:420px;object-fit:contain;background:#f4f4f1}
+.photo-bar{display:flex;gap:2px;justify-content:flex-end;padding:4px;border-top:1px solid #e3efe9;background:#f6fbf9}
+.add-photo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.add-photo label{cursor:pointer}
+.ai{border:2px solid #5b3fb3;background:#f5f2ff}
+.ai .box-t{color:#4a2fa0}
+.ai-status{font-size:13px;color:#4a2fa0;margin-top:6px;white-space:pre-wrap}
+.ai-badge{font-size:11px;font-weight:700;background:#5b3fb3;color:#fff;border-radius:6px;padding:0 6px;margin-left:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:700}
+.chk input{width:18px;height:18px}
+
+/* 裁切 */
+.crop-area{flex:1;display:flex;align-items:center;justify-content:center;background:#111;padding:12px;overflow:hidden}
+#cropCanvas{max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;display:block}
+.crop-bar{flex:none;background:#111;color:#ddd;padding:10px 12px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.crop-bar .btn{border-color:#555;background:#222;color:#fff}
+.crop-bar .btn.green{background:var(--question);border-color:var(--question)}
+
+/* 複習 */
+.rev-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.bar{height:8px;background:#e4e2da;border-radius:99px;overflow:hidden;flex:1}
+.bar i{display:block;height:100%;background:var(--question);border-radius:99px;transition:width .25s}
+.flash{background:#fff;border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 rgba(28,36,51,.12);overflow:hidden}
+.flash .fh{background:var(--concept-bg);padding:10px 14px;border-bottom:2px solid var(--ink)}
+.flash .fh b{font-size:15px}
+.flash .fb{padding:14px}
+.flash .back{border-top:2px solid var(--ink);padding:14px;background:#fbfbf8}
+.rev-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.done{text-align:center;padding:30px 10px}
+.done b{font-size:40px;display:block}
+
+/* 更多 */
+.menu{display:flex;flex-direction:column;gap:10px}
+.menu .item{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.menu h3{font-size:15px;font-weight:900}
+.menu p{margin:0;font-size:13.5px;color:var(--muted)}
+.radio{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.radio label{display:flex;gap:8px;align-items:center}
+
+/* 對話框、提示 */
+.overlay{position:fixed;inset:0;z-index:70;background:rgba(20,26,38,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.dlg{background:#fff;border:2px solid var(--ink);border-radius:16px;max-width:420px;width:100%;padding:18px;display:flex;flex-direction:column;gap:10px}
+.dlg h3{font-size:17px;font-weight:900}
+.dlg p{margin:0;font-size:14px;color:var(--muted)}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 22px);z-index:90;transform:translate(-50%,16px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 8px 22px rgba(0,0,0,.25);opacity:0;transition:all .25s;pointer-events:none;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.zoom{position:fixed;inset:0;z-index:95;background:rgba(10,14,22,.92);display:flex;align-items:center;justify-content:center;padding:10px;cursor:zoom-out}
+.zoom img{max-width:100%;max-height:100%;background:#fff;border-radius:6px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+@media (min-width:700px){.wrap{padding-top:20px}.card-head h2{font-size:18px}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="top-in"><h1 id="topTitle">大觀念錯題本</h1><span class="sync" id="sync">連線中…</span></div></header>
+
+<!-- ============ 分頁 1：錯題本 ============ -->
+<section class="wrap" id="viewBook">
+  <div class="notice hidden" id="notice"></div>
+  <div class="stats" id="stats"></div>
+  <div class="filters">
+    <div class="chips" id="chips"></div>
+    <input class="search" id="search" type="search" placeholder="搜尋觀念、題目、出處" aria-label="搜尋">
+    <label class="toggle" for="hideMastered"><input type="checkbox" id="hideMastered">隱藏已掌握</label>
+  </div>
+  <div class="list" id="list"><div class="empty"><span class="spin"></span> 正在載入你的錯題本…</div></div>
+</section>
+
+<!-- ============ 分頁 2：複習 ============ -->
+<section class="wrap hidden" id="viewReview"></section>
+
+<!-- ============ 分頁 3：觀念 ============ -->
+<section class="wrap hidden" id="viewConcepts"></section>
+
+<!-- ============ 分頁 4：更多 ============ -->
+<section class="wrap hidden" id="viewMore">
+  <div class="menu">
+    <div class="item">
+      <h3>A4 列印版／PDF</h3>
+      <p>下載一個列印用網頁檔，用瀏覽器開啟後會跳出列印視窗，可選「另存為 PDF」。範圍依照「錯題本」頁目前的分類與搜尋。</p>
+      <div class="radio">
+        <label><input type="radio" name="pmode" value="full" checked>完整版（含答案、詳解、記憶點）</label>
+        <label><input type="radio" name="pmode" value="practice">練習版（隱藏答案，留作答空間）</label>
+        <label><input type="checkbox" id="pSkip">不印已掌握的題目</label>
+      </div>
+      <button class="btn" type="button" id="btnPrint">下載列印版</button>
+    </div>
+    <div class="item">
+      <h3>備份與匯入</h3>
+      <p id="backupInfo"></p>
+      <div class="two">
+        <button class="btn" type="button" id="btnExport">下載備份</button>
+        <label class="btn" for="fileImport">匯入備份<input type="file" id="fileImport" accept=".json,application/json" class="hidden"></label>
+      </div>
+    </div>
+    <div class="item">
+      <h3>使用方式</h3>
+      <p>1. 按底部綠色「拍錯題」，拍下題目（圖表一起拍進去）。<br>2. 可裁切、旋轉；圖表在另一頁就再拍一張。<br>3. 選這題屬於課本哪一節；或按「AI 辨識並整理」，自動抄題、判斷章節、寫出詳解草稿。<br>4. 「複習」頁會一題一題考你，答對的標記為已掌握。</p>
+      <p>每個人看到的是自己的錯題本，其他人看不到。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 底部分頁 ============ -->
+<nav class="nav" aria-label="主選單">
+  <div class="nav-in">
+    <button type="button" data-view="Book" class="on"><span class="ic">📒</span>錯題本</button>
+    <button type="button" data-view="Review"><span class="ic">🔁</span>複習</button>
+    <button type="button" class="fab" id="fab" aria-label="拍錯題"><span class="ic">📷</span>拍錯題</button>
+    <button type="button" data-view="Concepts"><span class="ic">💡</span>觀念</button>
+    <button type="button" data-view="More"><span class="ic">⋯</span>更多</button>
+  </div>
+</nav>
+
+<!-- ============ 錯題面板（新增／編輯） ============ -->
+<div class="sheet hidden" id="sheetQ" role="dialog" aria-modal="true" aria-labelledby="sqTitle">
+  <div class="sheet-h">
+    <button type="button" id="sqCancel">取消</button>
+    <h2 id="sqTitle">新錯題</h2>
+    <button type="button" class="save" id="sqSave">儲存</button>
+  </div>
+  <div class="sheet-b">
+    <div class="sheet-in">
+      <div class="box">
+        <div class="box-t">題目照片（含圖表）</div>
+        <div class="photos" id="photos"></div>
+        <div class="add-photo" style="margin-top:10px">
+          <label class="btn green sm" for="inCamera">📷 拍照<input type="file" id="inCamera" accept="image/*" capture="environment" class="hidden"></label>
+          <label class="btn sm" for="inAlbum">🖼 從相簿選<input type="file" id="inAlbum" accept="image/*" multiple class="hidden"></label>
+        </div>
+        <p class="hint" id="pasteHint">電腦上也可以直接按 Ctrl+V 貼上截圖。</p>
+      </div>
+
+      <div class="box ai hidden" id="aiBox">
+        <div class="box-t">AI 幫你整理</div>
+        <button class="btn primary block" type="button" id="btnAI">AI 辨識並整理</button>
+        <div class="ai-status" id="aiStatus">會抄下題目、建議歸到哪個大觀念、寫出詳解與記憶點草稿。結果請自己核對。</div>
+      </div>
+
+      <div class="box stack">
+        <div>
+          <label class="f" for="qConcept">屬於課本哪一節 <span class="req">*</span></label>
+          <select class="in" id="qConcept"></select>
+        </div>
+        <div class="stack hidden" id="newConceptFields">
+          <div><label class="f" for="ncCat">分類 <span class="req">*</span></label><input class="in" id="ncCat" list="catList" placeholder="例：電磁感應"></div>
+          <div><label class="f" for="ncTitle">大觀念名稱 <span class="req">*</span></label><input class="in" id="ncTitle" placeholder="例：冷次定律判斷感應電流方向"></div>
+        </div>
+        <datalist id="catList"></datalist>
+      </div>
+
+      <div class="box stack">
+        <div class="two">
+          <div><label class="f" for="qWrong">我的答案</label><input class="in mono" id="qWrong" placeholder="例：BC" autocapitalize="characters"></div>
+          <div><label class="f" for="qCorrect">正確答案</label><input class="in mono" id="qCorrect" placeholder="例：AD" autocapitalize="characters"></div>
+        </div>
+        <div><label class="f" for="qSource">出處（選填）</label><input class="in" id="qSource" placeholder="例：第二次段考 第 12 題"></div>
+        <div>
+          <span class="f" style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">錯因</span>
+          <div class="choice" id="qType"></div>
+        </div>
+        <label class="chk" for="qMis" style="color:var(--bad)"><input type="checkbox" id="qMis" style="accent-color:var(--bad)">原本寫對，訂正時改錯了</label>
+      </div>
+
+      <div class="box stack">
+        <div>
+          <label class="f" for="qExp">訂正／詳解</label>
+          <textarea class="in" id="qExp" rows="4" placeholder="為什麼錯？正確的想法是什麼？可以之後再補。公式用 $...$，例如 $F=ma$"></textarea>
+          <div class="preview rich" data-preview-of="qExp"></div>
+        </div>
+        <div>
+          <label class="f" for="qMem">加一條重點記憶點到這個大觀念（選填）</label>
+          <input class="in" id="qMem" placeholder="例：看到等速圓周運動，加速度一定指向圓心">
+        </div>
+        <div>
+          <label class="f" for="qStem">題目文字（選填，照片看得清楚就不用打）</label>
+          <textarea class="in" id="qStem" rows="3" placeholder="可讓 AI 辨識，或自己打"></textarea>
+          <div class="preview rich" data-preview-of="qStem"></div>
+        </div>
+      </div>
+      <button class="btn green block" type="button" id="sqSave2">儲存這題</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 裁切面板 ============ -->
+<div class="sheet hidden" id="sheetCrop" role="dialog" aria-modal="true" aria-label="裁切照片" style="z-index:60">
+  <div class="sheet-h"><button type="button" id="cropCancel">取消</button><h2>用手指框出要保留的範圍</h2><button type="button" class="save" id="cropDone">完成</button></div>
+  <div class="crop-area" id="cropArea"><canvas id="cropCanvas"></canvas></div>
+  <div class="crop-bar">
+    <button class="btn sm" type="button" id="cropRotate">旋轉 90°</button>
+    <button class="btn sm" type="button" id="cropReset">取消框選</button>
+    <button class="btn sm green" type="button" id="cropSplit">框選處另存成新的一張</button>
+  </div>
+</div>
+
+<!-- ============ 大觀念面板 ============ -->
+<div class="sheet hidden" id="sheetC" role="dialog" aria-modal="true" aria-labelledby="scTitle">
+  <div class="sheet-h"><button type="button" id="scCancel">取消</button><h2 id="scTitle">大觀念</h2><button type="button" class="save" id="scSave">儲存</button></div>
+  <div class="sheet-b"><div class="sheet-in">
+    <div class="box stack">
+      <div><label class="f" for="cCat">分類 <span class="req">*</span></label><input class="in" id="cCat" list="catList" placeholder="例：電磁感應"></div>
+      <div><label class="f" for="cTitle">大觀念名稱 <span class="req">*</span></label><input class="in" id="cTitle" placeholder="例：冷次定律判斷感應電流方向"></div>
+    </div>
+    <div class="box">
+      <label class="f" for="cPoints">【觀念】核心定律與公式（每行一條，公式用 $...$）</label>
+      <textarea class="in" id="cPoints" rows="5" placeholder="感應電動勢 $\varepsilon=-N\frac{\Delta\Phi_B}{\Delta t}$&#10;感應電流的磁場反抗原磁通量的變化"></textarea>
+      <div class="preview rich" data-preview-of="cPoints" data-lines="1"></div>
+    </div>
+    <div class="box">
+      <label class="f" for="cMem">【重點記憶點】（每行一條）</label>
+      <textarea class="in" id="cMem" rows="4" placeholder="口訣：增反減同、來拒去留"></textarea>
+      <div class="preview rich" data-preview-of="cMem" data-lines="1"></div>
+    </div>
+  </div></div>
+</div>
+
+<div class="overlay hidden" id="dlgConfirm" role="dialog" aria-modal="true" aria-labelledby="cfTitle">
+  <div class="dlg"><h3 id="cfTitle"></h3><p id="cfMsg"></p>
+    <div class="row"><button class="btn ghost sm" type="button" id="cfNo">取消</button><button class="btn danger sm" type="button" id="cfYes">確定</button></div></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   0. 工具
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const uid = (p) => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = (t) => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const rich = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+const lines = (t) => String(t || '').split('\n').map(s => s.trim()).filter(Boolean);
+const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+const today = () => new Date().toLocaleDateString('sv-SE');
+const MATH_OPTS = { delimiters: [{ left: '$$', right: '$$', display: true }, { left: '\\[', right: '\\]', display: true }, { left: '$', right: '$', display: false }, { left: '\\(', right: '\\)', display: false }], throwOnError: false };
+function typeset(el) { try { if (window.renderMathInElement) renderMathInElement(el, MATH_OPTS); } catch (e) { console.warn(e); } }
+const ERR_TYPES = ['觀念不清', '公式記錯', '審題不清', '計算錯誤', '圖表判讀', '粗心'];
+/* 課綱大觀念（curriculum.js） */
+const TPL = [];
+(window.CURRICULUM || (typeof CURRICULUM !== 'undefined' ? CURRICULUM : [])).forEach((ch, ci) => ch.concepts.forEach((t, ti) => TPL.push(Object.assign({}, t, {
+  id: 'k' + t.key, chKey: ch.ch, chLabel: ch.ch === '探' ? '探究實作' : `第${ch.ch}章 ${ch.name}`, rank: ci * 100 + ti }))));
+const CHAPTERS = (typeof CURRICULUM !== 'undefined' ? CURRICULUM : []);
+const TPLMAP = Object.fromEntries(TPL.map(t => [t.id, t]));
+const tplTitle = (t) => (/^I/.test(t.key) ? '' : t.key + ' ') + t.title;
+function tplConcept(id) {
+  const t = TPLMAP[id]; if (!t) return null;
+  return { id, category: t.chLabel, title: tplTitle(t), conceptPoints: t.points.slice(), memoryPoints: t.mem.slice(), tpl: t.key, order: 0, createdAt: Date.now() };
+}
+const getConcept = (id) => S.concepts[id] || tplConcept(id);
+const rankOf = (c) => (TPLMAP[c.id] ? TPLMAP[c.id].rank : 1e6);
+
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800); }
+function confirmDlg(title, msg, ok = '確定') {
+  return new Promise(res => {
+    $('#cfTitle').textContent = title; $('#cfMsg').textContent = msg; $('#cfYes').textContent = ok;
+    $('#dlgConfirm').classList.remove('hidden');
+    const done = (v) => { $('#dlgConfirm').classList.add('hidden'); $('#cfYes').onclick = $('#cfNo').onclick = null; res(v); };
+    $('#cfYes').onclick = () => done(true); $('#cfNo').onclick = () => done(false);
+  });
+}
+function dataUrlToBlob(d) {
+  const [h, b] = d.split(','); const mime = (h.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+  const bin = atob(b); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+/* =====================================================================
+   1. 狀態
+   ===================================================================== */
+const S = {
+  mode: 'loading', base: null, downloads: null, sample: null, sampleImages: false,
+  concepts: {}, questions: {}, localImages: {}, imgCache: {},
+  view: 'Book', filter: 'ALL', search: '', hideMastered: false,
+  open: new Set(), mapOpen: new Set(), focus: null, revealed: new Set(), gotC: false, gotQ: false,
+  review: null,
+};
+const LS_KEY = 'mistakebook_v1';
+
+/* =====================================================================
+   2. 儲存層：雲端（每人私有）優先，否則存本機瀏覽器
+   ===================================================================== */
+const chains = {};
+function queued(key, fn) { const n = (chains[key] || Promise.resolve()).catch(() => {}).then(fn); chains[key] = n; return n; }
+function explainError(e) {
+  const c = e && e.code;
+  if (c === 'quota_exceeded') return '雲端空間已滿，請刪除部分舊題後再試';
+  if (c === 'invalid_argument') return '寫入被拒絕：可能沒有存檔權限（請老師把你的權限設為可參與），或照片太大';
+  if (c === 'resource_exhausted') return '操作太頻繁，請稍候再試';
+  if (c === 'revoked') return '存取權已變更，請重新整理';
+  return '儲存失敗，請稍後再試';
+}
+async function safe(p) { try { await p; return true; } catch (e) { console.error(e); toast(explainError(e)); return false; } }
+const col = (n) => S.base.collection(n);
+const plain = (o) => JSON.parse(JSON.stringify(o));
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify({ concepts: S.concepts, questions: S.questions, images: S.localImages })); } catch (e) { toast('瀏覽器空間已滿，請先下載備份並刪除部分照片'); } }
+function loadLocal() { try { const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null'); if (d) { S.concepts = d.concepts || {}; S.questions = d.questions || {}; S.localImages = d.images || {}; } } catch (e) {} }
+function put(kind, obj) {
+  const map = kind === 'concepts' ? S.concepts : S.questions;
+  map[obj.id] = obj; scheduleRender();
+  if (S.mode === 'db') return safe(queued(kind + obj.id, () => col(kind).doc(obj.id).set(plain(obj))));
+  saveLocal(); return Promise.resolve(true);
+}
+function del(kind, id) {
+  const map = kind === 'concepts' ? S.concepts : S.questions;
+  delete map[id]; scheduleRender();
+  if (S.mode === 'db') return safe(queued(kind + id, () => col(kind).doc(id).delete()));
+  saveLocal(); return Promise.resolve(true);
+}
+const store = {
+  putConcept: (c) => put('concepts', c), delConcept: (id) => del('concepts', id),
+  putQuestion: (q) => put('questions', q), delQuestion: (id) => del('questions', id),
+  putImage(id, data) {
+    S.imgCache[id] = data;
+    if (S.mode === 'db') return safe(queued('i' + id, () => col('images').doc(id).set({ data })));
+    S.localImages[id] = data; saveLocal(); return Promise.resolve(true);
+  },
+  delImage(id) {
+    delete S.imgCache[id];
+    if (S.mode === 'db') return safe(queued('i' + id, () => col('images').doc(id).delete()));
+    delete S.localImages[id]; saveLocal(); return Promise.resolve(true);
+  },
+  async getImage(id) {
+    if (S.imgCache[id]) return S.imgCache[id];
+    if (S.mode === 'db') {
+      try { const s = await col('images').doc(id).get(); if (s.exists) return (S.imgCache[id] = s.data().data); } catch (e) { console.warn(e); }
+      return null;
+    }
+    return S.localImages[id] || null;
+  }
+};
+
+async function initBackend() {
+  let db = null, user = null, dl = null, sm = null;
+  if (window.claude && typeof window.claude.use === 'function') {
+    const u = (n) => withTimeout(claude.use(n), 12000).catch(() => null);
+    [db, user, dl, sm] = await Promise.all([u('db'), u('user'), u('downloads'), u('sample')]);
+  }
+  S.downloads = dl;
+  if (sm) {
+    S.sample = sm;
+    try { const lim = await sm.limits(); S.sampleImages = !!lim?.images; } catch (e) { S.sampleImages = false; }
+  }
+  let id = null;
+  if (user && typeof user.id === 'function') { try { id = await user.id(); } catch (e) {} }
+  if (db && id) {
+    try { S.base = db.doc('data/users/' + id + '/nb'); S.mode = 'db'; subscribe(); return; } catch (e) { console.warn(e); }
+  }
+  S.mode = 'local'; loadLocal();
+  showNotice('這個版本的錯題存在這支手機（或電腦）的瀏覽器裡，不會上傳。換手機或清除瀏覽資料前，請到「更多」下載備份。');
+  render();
+}
+function subscribe() {
+  const timer = setTimeout(() => { if (!(S.gotC && S.gotQ)) showNotice('雲端暫時連不上，連線恢復後會自動更新。'); }, 10000);
+  const done = (m) => { if (S.gotC && S.gotQ && m && !m.fromCache) { clearTimeout(timer); hideNotice(); } };
+  const handle = (kind) => (snap) => {
+    const next = {}; snap.docs.forEach(d => { next[d.id] = Object.assign({}, d.data(), { id: d.id }); });
+    if (kind === 'concepts') { S.concepts = next; S.gotC = true; } else { S.questions = next; S.gotQ = true; }
+    done(snap.metadata); scheduleRender();
+  };
+  const fail = (kind) => (err) => { clearTimeout(timer); showNotice('讀取雲端資料失敗：' + explainError(err)); if (kind === 'concepts') S.gotC = true; else S.gotQ = true; scheduleRender(); };
+  col('concepts').onSnapshot(handle('concepts'), fail('concepts'));
+  col('questions').onSnapshot(handle('questions'), fail('questions'));
+}
+function showNotice(t) { $('#notice').textContent = t; $('#notice').classList.remove('hidden'); }
+function hideNotice() { $('#notice').classList.add('hidden'); }
+
+/* =====================================================================
+   3. 查詢
+   ===================================================================== */
+const conceptList = () => Object.values(S.concepts).sort((a, b) => (rankOf(a) - rankOf(b)) || ((b.order || 0) - (a.order || 0)));
+const questionsOf = (cid) => Object.values(S.questions).filter(q => q.conceptId === cid).sort((a, b) => (a.order || 0) - (b.order || 0));
+const categories = () => [...new Set(conceptList().map(c => c.category).filter(Boolean))];
+const needsFix = (q) => !q.explanation || !q.correctAns;
+const has = (t, kw) => String(t || '').toLowerCase().includes(kw);
+function visibleData() {
+  const kw = S.search.trim().toLowerCase();
+  let list = conceptList();
+  if (S.focus) list = list.filter(c => c.id === S.focus);
+  else if (S.filter !== 'ALL') list = list.filter(c => c.category === S.filter);
+  const out = [];
+  for (const c of list) {
+    let qs = questionsOf(c.id);
+    if (S.hideMastered) qs = qs.filter(q => !q.mastered);
+    if (kw) {
+      const cHit = [c.title, c.category, ...(c.conceptPoints || []), ...(c.memoryPoints || [])].some(t => has(t, kw));
+      const qHit = qs.filter(q => [q.source, q.stem, q.explanation, q.errType].some(t => has(t, kw)));
+      if (!cHit && !qHit.length) continue;
+      if (!cHit) qs = qHit;
+    }
+    out.push({ c, qs });
+  }
+  return out;
+}
+
+/* =====================================================================
+   4. 畫面
+   ===================================================================== */
+let pending = false;
+function scheduleRender() { if (pending) return; pending = true; requestAnimationFrame(() => { pending = false; render(); }); }
+const ready = () => S.mode === 'local' || (S.mode === 'db' && S.gotC && S.gotQ);
+
+function render() {
+  const sync = $('#sync');
+  sync.textContent = S.mode === 'db' ? '雲端同步' : S.mode === 'local' ? '僅存本機' : '連線中…';
+  sync.classList.toggle('local', S.mode === 'local');
+  if (!ready()) return;
+  $('#catList').innerHTML = categories().map(c => `<option value="${esc(c)}"></option>`).join('');
+  if (S.view === 'Book') renderBook();
+  if (S.view === 'Concepts') renderConcepts();
+  if (S.view === 'Review' && !S.review) renderReviewStart();
+  if (S.view === 'More') renderMore();
+}
+
+function renderBook() {
+  const qs = Object.values(S.questions);
+  const left = qs.filter(q => !q.mastered).length, fix = qs.filter(needsFix).length;
+  $('#stats').innerHTML = `<div class="stat"><b>${qs.length}</b><span>錯題</span></div><div class="stat warn"><b>${left}</b><span>還沒掌握</span></div><div class="stat"><b>${fix}</b><span>待訂正</span></div>`;
+  const cats = categories();
+  if (S.filter !== 'ALL' && !cats.includes(S.filter)) S.filter = 'ALL';
+  const chip = (v, l) => `<button type="button" class="chip ${S.filter === v ? 'on' : ''}" data-act="filter" data-val="${esc(v)}">${esc(l)}</button>`;
+  if (S.focus && !S.concepts[S.focus]) S.focus = null;
+  $('#chips').innerHTML = S.focus ? `<button type="button" class="chip on" data-act="unfocus">只看：${esc(S.concepts[S.focus].title)}　✕</button>`
+    : chip('ALL', '全部') + cats.map(c => chip(c, c)).join('');
+
+  const list = $('#list');
+  if (!Object.keys(S.concepts).length) {
+    list.innerHTML = `<div class="welcome">
+      <h2>開始建立你的錯題本</h2>
+      <ol><li>按下方綠色 <b>📷 拍錯題</b>，把題目連同圖表拍下來。</li>
+      <li>選這題屬於課本哪一節（AI 也能幫你判斷），同一節的錯題會收在一起。</li>
+      <li>填正確答案和訂正；不想打字可以按「AI 辨識並整理」。</li>
+      <li>到「複習」頁一題一題自我測驗。</li></ol>
+      <button class="btn green block" type="button" data-act="shoot">📷 拍第一題</button>
+      <p class="hint" style="text-align:center;margin-top:10px">「觀念」分頁有課本每一節的重點整理。</p></div>`;
+    return;
+  }
+  const data = visibleData();
+  if (!data.length) { list.innerHTML = '<div class="empty">沒有符合條件的錯題。</div>'; return; }
+  const forceOpen = !!S.search.trim();
+  list.innerHTML = data.map(({ c, qs }) => renderCard(c, qs, forceOpen || S.open.has(c.id))).join('');
+  typeset(list); hydrateImages(list);
+}
+
+function renderCard(c, qs, open) {
+  const all = questionsOf(c.id);
+  const left = all.filter(q => !q.mastered).length, fix = all.filter(needsFix).length;
+  const head = `<button type="button" class="card-head" data-act="toggle" data-id="${esc(c.id)}" aria-expanded="${open}">
+      <div class="t"><h2>${esc(c.title)}</h2>
+        <div class="meta">${c.category ? `<span class="pill">${esc(c.category)}</span>` : ''}
+          <span class="pill ${left ? 'bad' : 'good'}">${all.length} 題・${left ? left + ' 題未掌握' : '全部掌握'}</span>
+          ${fix ? `<span class="pill todo">${fix} 題待訂正</span>` : ''}</div></div>
+      <span class="chev">›</span></button>`;
+  if (!open) return `<article class="card">${head}</article>`;
+  const points = (c.conceptPoints || []).length
+    ? `<ul class="points">${c.conceptPoints.map((p, i) => `<li><span class="num">${i + 1}</span><div class="rich">${rich(p)}</div></li>`).join('')}</ul>`
+    : `<p class="muted" style="margin:0;font-size:13.5px">還沒寫觀念重點。<button type="button" class="link-btn" data-act="cedit" data-id="${esc(c.id)}">現在補上</button></p>`;
+  const mems = (c.memoryPoints || []).length
+    ? `<ul class="mem">${c.memoryPoints.map(m => `<li><span class="rich">${rich(m)}</span></li>`).join('')}</ul>`
+    : `<p class="muted" style="margin:0;font-size:13.5px">還沒有記憶點。</p>`;
+  return `<article class="card open" id="card-${esc(c.id)}">${head}
+    <section class="tier concept"><div class="tier-h"><span class="stamp s-c">【觀念】</span><button type="button" class="link-btn" data-act="cedit" data-id="${esc(c.id)}">編輯</button></div>${points}</section>
+    <section class="tier"><div class="tier-h"><span class="stamp s-q">【題目】</span></div>
+      ${qs.length ? qs.map((q, i) => renderQ(q, i)).join('') : '<p class="muted" style="margin:0;font-size:13.5px">這個觀念還沒有題目。</p>'}
+      <button type="button" class="add-q" data-act="shoot" data-id="${esc(c.id)}">📷 在這個觀念下再拍一題</button></section>
+    <section class="tier memory"><div class="tier-h"><span class="stamp s-m">【重點記憶點】</span><button type="button" class="link-btn" data-act="cedit" data-id="${esc(c.id)}">增修</button></div>${mems}</section>
+    <div class="card-foot"><button type="button" class="link-btn danger" data-act="cdel" data-id="${esc(c.id)}">刪除這張卡片</button></div>
+  </article>`;
+}
+
+function figsHtml(q) {
+  const imgs = Array.isArray(q.images) ? q.images : [];
+  return imgs.length ? `<div class="figs">${imgs.map(id => `<div class="fig"><img data-img="${esc(id)}" alt="題目照片" class="hidden"><div class="ph"><span class="spin"></span> 載入照片…</div></div>`).join('')}</div>` : '';
+}
+function tagsHtml(q, idx) {
+  return `${idx != null ? `<span class="tag no">第 ${idx + 1} 題</span>` : ''}
+    ${q.source ? `<span class="tag">${esc(q.source)}</span>` : ''}
+    ${q.wrongAns ? `<span class="tag wrong">我選 <span class="mono">${esc(q.wrongAns)}</span></span>` : ''}
+    ${q.errType ? `<span class="tag type">${esc(q.errType)}</span>` : ''}
+    ${q.isMiscorrected ? `<span class="tag warn">訂正時改錯</span>` : ''}
+    ${needsFix(q) ? `<span class="tag todo">待訂正</span>` : ''}
+    ${q.mastered ? `<span class="tag" style="color:var(--good)">已掌握</span>` : ''}`;
+}
+function renderQ(q, i) {
+  const masked = !S.revealed.has(q.id);
+  const ansBody = q.correctAns || q.explanation
+    ? `<div class="ans">正確答案：<span class="mono">${esc(q.correctAns || '（未填）')}</span></div>${q.explanation ? `<p class="rich">${rich(q.explanation)}</p>` : '<p class="muted">還沒寫訂正。</p>'}`
+    : `<p class="muted" style="margin:0">還沒填答案與訂正。</p>`;
+  return `<div class="q ${q.mastered ? 'mastered' : ''}">
+    <div class="q-top">${tagsHtml(q, i)}</div>
+    ${figsHtml(q)}
+    ${q.stem ? `<div class="stem rich">${rich(q.stem)}</div>` : ''}
+    <div class="answer ${masked ? 'is-masked' : ''}" data-reveal="${esc(q.id)}" ${masked ? 'role="button" tabindex="0"' : ''}>
+      <div class="cover">先想一想，點一下看答案與訂正</div><div class="mc">${ansBody}</div></div>
+    <div class="q-actions">
+      <button type="button" class="link-btn" data-act="master" data-id="${esc(q.id)}">${q.mastered ? '改回未掌握' : '✓ 標記已掌握'}</button>
+      <button type="button" class="link-btn" data-act="qedit" data-id="${esc(q.id)}">編輯</button>
+      <button type="button" class="link-btn danger" data-act="qdel" data-id="${esc(q.id)}">刪除</button>
+    </div></div>`;
+}
+async function hydrateImages(root) {
+  for (const img of $$('img[data-img]', root)) {
+    const data = await store.getImage(img.dataset.img);
+    const ph = img.parentElement.querySelector('.ph');
+    if (data) { img.src = data; img.classList.remove('hidden'); ph?.remove(); }
+    else if (ph) ph.textContent = '找不到這張照片';
+  }
+}
+
+/* 課綱地圖：每一節的重點＋我的錯題數，看出弱點 */
+function renderConcepts() {
+  const v = $('#viewConcepts');
+  const stat = (id) => { const qs = Object.values(S.questions).filter(q => q.conceptId === id); return { n: qs.length, left: qs.filter(q => !q.mastered).length }; };
+  const row = (id, title) => {
+    const c = getConcept(id), st = stat(id), open = S.mapOpen.has(id);
+    const badge = st.n ? `<span class="pill ${st.left ? 'bad' : 'good'}">${st.n} 題${st.left ? `・${st.left} 未掌握` : '・全掌握'}</span>` : `<span class="pill" style="background:#eceae3;color:var(--muted)">無錯題</span>`;
+    const body = open ? `<div style="padding:2px 12px 12px">
+        ${(c.conceptPoints || []).length ? `<ul class="points">${c.conceptPoints.map((p, i) => `<li><span class="num">${i + 1}</span><div class="rich">${rich(p)}</div></li>`).join('')}</ul>` : ''}
+        ${(c.memoryPoints || []).length ? `<div style="margin-top:8px;background:var(--memory-bg);border:1px solid #ebcf94;border-radius:10px;padding:9px 12px"><ul class="mem">${c.memoryPoints.map(m => `<li><span class="rich">${rich(m)}</span></li>`).join('')}</ul></div>` : ''}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+          ${st.n ? `<button type="button" class="btn sm" data-act="focus" data-id="${esc(id)}">看這節的 ${st.n} 道錯題</button>` : ''}
+          <button type="button" class="btn sm green" data-act="shoot" data-id="${esc(id)}">📷 拍這節的錯題</button>
+          <button type="button" class="btn sm ghost" data-act="cedit" data-id="${esc(id)}">編輯重點</button></div></div>` : '';
+    return `<div style="border-top:1px solid var(--line);background:${open ? '#fbfbf8' : '#fff'}">
+      <button type="button" data-act="mapopen" data-id="${esc(id)}" aria-expanded="${open}" style="width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;display:flex;gap:8px;align-items:center">
+        <span style="flex:1;font-weight:700;font-size:14.5px">${esc(title)}</span>${badge}<span class="chev" style="${open ? 'transform:rotate(90deg)' : ''}">›</span></button>${body}</div>`;
+  };
+  const chapterLabels = new Set(TPL.map(t => t.chLabel));
+  let html = `<p class="muted" style="margin:0 0 12px;font-size:13.5px">課本每一節的重點與口訣，點開來看；紅色標籤代表還有沒掌握的錯題。</p><div class="list">`;
+  for (const ch of CHAPTERS) {
+    const label = ch.ch === '探' ? '探究實作' : `第${ch.ch}章 ${ch.name}`;
+    const tpls = TPL.filter(t => t.chKey === ch.ch);
+    const customs = conceptList().filter(c => !TPLMAP[c.id] && c.category === label);
+    const left = [...tpls.map(t => t.id), ...customs.map(c => c.id)].reduce((s, id) => s + stat(id).left, 0);
+    html += `<article class="card"><div style="background:var(--concept-bg);padding:11px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="font-size:16px;font-weight:900">${esc(label)}</h2>${left ? `<span class="pill bad">${left} 題未掌握</span>` : ''}</div>
+      ${tpls.map(t => row(t.id, tplTitle(t))).join('')}${customs.map(c => row(c.id, c.title)).join('')}</article>`;
+  }
+  const others = conceptList().filter(c => !TPLMAP[c.id] && !chapterLabels.has(c.category));
+  if (others.length) html += `<article class="card"><div style="background:var(--concept-bg);padding:11px 12px"><h2 style="font-size:16px;font-weight:900">自訂大觀念</h2></div>${others.map(c => row(c.id, c.title)).join('')}</article>`;
+  html += `</div><div style="margin-top:12px"><button class="btn sm ghost" type="button" data-act="cnew">＋ 自訂大觀念</button></div>`;
+  v.innerHTML = html;
+  typeset(v);
+}
+
+function renderMore() {
+  $('#backupInfo').textContent = `目前有 ${Object.keys(S.concepts).length} 個大觀念、${Object.keys(S.questions).length} 道錯題。` +
+    (S.mode === 'db' ? '資料存在雲端，換手機或電腦登入同一個帳號都看得到。備份檔可以當額外保險。' : '資料只存在這個瀏覽器，請定期下載備份。');
+}
+
+/* =====================================================================
+   5. 導覽與事件
+   ===================================================================== */
+function setView(v) {
+  S.view = v;
+  ['Book', 'Review', 'Concepts', 'More'].forEach(n => $('#view' + n).classList.toggle('hidden', n !== v));
+  $$('.nav [data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  $('#topTitle').textContent = { Book: '大觀念錯題本', Review: '複習', Concepts: '課綱地圖', More: '更多' }[v];
+  if (v === 'Review') { S.review = null; }
+  window.scrollTo(0, 0);
+  render();
+}
+$$('.nav [data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+$('#fab').addEventListener('click', () => openQuestionSheet(null, null, true));
+
+document.addEventListener('click', async (e) => {
+  const z = e.target.closest('.fig img, .flash img');
+  if (z && z.src) { const d = document.createElement('div'); d.className = 'zoom'; d.innerHTML = `<img alt="放大" src="${z.src}">`; d.onclick = () => d.remove(); document.body.appendChild(d); return; }
+  const rv = e.target.closest('[data-reveal].is-masked');
+  if (rv) { S.revealed.add(rv.dataset.reveal); rv.classList.remove('is-masked'); rv.removeAttribute('role'); rv.removeAttribute('tabindex'); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const id = b.dataset.id;
+  switch (b.dataset.act) {
+    case 'filter': S.filter = b.dataset.val; render(); break;
+    case 'toggle': S.open.has(id) ? S.open.delete(id) : S.open.add(id); render(); break;
+    case 'shoot': openQuestionSheet(id || null, null, true); break;
+    case 'cnew': openConceptSheet(null); break;
+    case 'mapopen': S.mapOpen.has(id) ? S.mapOpen.delete(id) : S.mapOpen.add(id); renderConcepts(); break;
+    case 'focus': S.focus = id; S.open.add(id); setView('Book'); break;
+    case 'unfocus': S.focus = null; render(); break;
+    case 'cedit': openConceptSheet(id); break;
+    case 'cdel': {
+      const c = S.concepts[id], qs = questionsOf(id);
+      if (await confirmDlg('刪除這個大觀念？', `「${c.title}」和底下 ${qs.length} 道錯題、照片會一起刪除，無法復原。`, '刪除')) {
+        for (const q of qs) { for (const im of (q.images || [])) await store.delImage(im); await store.delQuestion(q.id); }
+        await store.delConcept(id); toast('已刪除');
+      }
+      break;
+    }
+    case 'qedit': openQuestionSheet(S.questions[id].conceptId, id, false); break;
+    case 'qdel': {
+      const q = S.questions[id];
+      if (await confirmDlg('刪除這道錯題？', '題目和照片會被刪除，無法復原。', '刪除')) {
+        for (const im of (q.images || [])) await store.delImage(im);
+        await store.delQuestion(id); toast('已刪除');
+      }
+      break;
+    }
+    case 'master': { const q = Object.assign({}, S.questions[id], { mastered: !S.questions[id].mastered, updatedAt: Date.now() }); await store.putQuestion(q); toast(q.mastered ? '已標記為掌握' : '已改回未掌握'); break; }
+    case 'revStart': startReview(); break;
+    case 'revShow': S.review.shown = true; renderReviewCard(); break;
+    case 'revGrade': gradeReview(b.dataset.val === 'ok'); break;
+    case 'revEnd': S.review = null; renderReviewStart(); break;
+    case 'revCat': S.reviewCat = b.dataset.val; renderReviewStart(); break;
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.classList?.contains('is-masked')) { e.preventDefault(); e.target.click(); }
+  if (e.key === 'Escape') { $('.zoom')?.remove(); }
+});
+let searchT;
+$('#search').addEventListener('input', (e) => { clearTimeout(searchT); searchT = setTimeout(() => { S.search = e.target.value; render(); }, 200); });
+$('#hideMastered').addEventListener('change', (e) => { S.hideMastered = e.target.checked; render(); });
+
+/* LaTeX 預覽 */
+const pvT = {};
+function updatePreview(box) {
+  const src = $('#' + box.dataset.previewOf).value;
+  if (!src.trim() || !/[$\\*]/.test(src)) { box.innerHTML = ''; return; }
+  box.innerHTML = box.dataset.lines ? lines(src).map((l, i) => `<div>${i + 1}. ${rich(l)}</div>`).join('') : rich(src);
+  typeset(box);
+}
+$$('[data-preview-of]').forEach(box => $('#' + box.dataset.previewOf).addEventListener('input', () => { clearTimeout(pvT[box.dataset.previewOf]); pvT[box.dataset.previewOf] = setTimeout(() => updatePreview(box), 250); }));
+const refreshPreviews = (root) => $$('[data-preview-of]', root).forEach(updatePreview);
+
+function openSheet(id) { $('#' + id).classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeSheet(id) { $('#' + id).classList.add('hidden'); if (!$$('.sheet').some(s => !s.classList.contains('hidden'))) document.body.style.overflow = ''; }
+
+/* =====================================================================
+   6. 錯題面板
+   ===================================================================== */
+let Q = null;  // {questionId, photos:[{id,data,isNew}], removed:[], errType, aiConceptPoints}
+function fillConceptSelect(selected) {
+  const sel = $('#qConcept');
+  const count = (id) => Object.values(S.questions).filter(q => q.conceptId === id).length;
+  const opt = (id, label) => { const n = count(id); return `<option value="${esc(id)}">${esc(label)}${n ? `（已有 ${n} 題）` : ''}</option>`; };
+  let html = `<option value="">— 請選擇課本章節 —</option>`;
+  for (const ch of CHAPTERS) {
+    const label = ch.ch === '探' ? '探究實作' : `第${ch.ch}章 ${ch.name}`;
+    const tpls = TPL.filter(t => t.chKey === ch.ch);
+    const customs = conceptList().filter(c => !TPLMAP[c.id] && c.category === label);
+    html += `<optgroup label="${esc(label)}">${tpls.map(t => opt(t.id, tplTitle(t))).join('')}${customs.map(c => opt(c.id, c.title)).join('')}</optgroup>`;
+  }
+  const chapterLabels = new Set(TPL.map(t => t.chLabel));
+  const others = conceptList().filter(c => !TPLMAP[c.id] && !chapterLabels.has(c.category));
+  if (others.length) html += `<optgroup label="自訂大觀念">${others.map(c => opt(c.id, (c.category ? c.category + '｜' : '') + c.title)).join('')}</optgroup>`;
+  html += `<option value="__new">＋ 自訂新的大觀念</option>`;
+  sel.innerHTML = html;
+  sel.value = selected || '';
+  syncNewConcept();
+}
+function syncNewConcept() { $('#newConceptFields').classList.toggle('hidden', $('#qConcept').value !== '__new'); }
+$('#qConcept').addEventListener('change', syncNewConcept);
+
+function renderErrTypes() {
+  $('#qType').innerHTML = ERR_TYPES.map(t => `<button type="button" class="${Q.errType === t ? 'on' : ''}" data-et="${esc(t)}">${esc(t)}</button>`).join('');
+}
+$('#qType').addEventListener('click', (e) => { const b = e.target.closest('[data-et]'); if (!b) return; Q.errType = Q.errType === b.dataset.et ? '' : b.dataset.et; renderErrTypes(); });
+
+function openQuestionSheet(conceptId, questionId, launchCamera) {
+  if (!ready()) { toast('還在載入，請稍候'); return; }
+  const q = questionId ? S.questions[questionId] : null;
+  Q = { questionId: questionId || null, photos: [], removed: [], errType: q?.errType || '', aiConceptPoints: null };
+  $('#sqTitle').textContent = q ? '編輯錯題' : '新錯題';
+  fillConceptSelect(conceptId || q?.conceptId || '');
+  $('#ncCat').value = S.filter !== 'ALL' ? S.filter : ''; $('#ncTitle').value = '';
+  $('#qWrong').value = q?.wrongAns || ''; $('#qCorrect').value = q?.correctAns || '';
+  $('#qSource').value = q?.source || ''; $('#qMis').checked = !!q?.isMiscorrected;
+  $('#qExp').value = q?.explanation || ''; $('#qStem').value = q?.stem || ''; $('#qMem').value = '';
+  $('#qMem').parentElement.classList.toggle('hidden', !!q);
+  renderErrTypes();
+  if (q) {
+    for (const id of (q.images || [])) Q.photos.push({ id, data: S.imgCache[id] || null, isNew: false });
+    Q.photos.forEach(async p => { if (!p.data) { p.data = await store.getImage(p.id); renderPhotos(); } });
+  }
+  renderPhotos();
+  $('#aiBox').classList.toggle('hidden', !(S.sample && S.sampleImages));
+  $('#aiStatus').textContent = '會抄下題目、建議歸到哪個大觀念、寫出詳解與記憶點草稿。結果請自己核對。';
+  refreshPreviews($('#sheetQ'));
+  openSheet('sheetQ');
+  $('#sheetQ .sheet-b').scrollTop = 0;
+  if (launchCamera && !q && matchMedia('(pointer: coarse)').matches) { try { $('#inCamera').click(); } catch (e) {} }
+}
+function renderPhotos() {
+  $('#photos').innerHTML = Q.photos.length ? Q.photos.map((p, i) => `<div class="photo">
+      ${p.data ? `<img alt="題目照片 ${i + 1}" src="${esc(p.data)}">` : '<div class="hint" style="padding:30px;text-align:center">載入中…</div>'}
+      <div class="photo-bar"><span class="hint" style="margin:0 auto 0 6px;align-self:center">第 ${i + 1} 張</span>
+        <button type="button" class="link-btn" data-ph="crop" data-i="${i}">裁切／旋轉</button>
+        <button type="button" class="link-btn danger" data-ph="rm" data-i="${i}">移除</button></div></div>`).join('')
+    : '<p class="hint" style="margin:0">還沒有照片。拍下整題，圖表也要拍進去。</p>';
+}
+$('#photos').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ph]'); if (!b) return;
+  const i = +b.dataset.i;
+  if (b.dataset.ph === 'rm') { const [p] = Q.photos.splice(i, 1); if (p && !p.isNew) Q.removed.push(p.id); renderPhotos(); }
+  else if (Q.photos[i]?.data) openCrop(i);
+});
+$('#sqCancel').addEventListener('click', async () => {
+  const dirty = Q.photos.some(p => p.isNew) || $('#qExp').value.trim();
+  if (dirty && !Q.questionId && !(await confirmDlg('放棄這題？', '照片和填寫的內容不會儲存。', '放棄'))) return;
+  closeSheet('sheetQ');
+});
+
+/* 讀入照片 → 壓縮 */
+const MAX_DIM = 1800;
+function fileToCanvas(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { const s = Math.min(1, 3000 / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('bad image')); };
+    img.src = url;
+  });
+}
+function compress(canvas) {
+  let maxDim = MAX_DIM, q = 0.85, out;
+  for (let i = 0; i < 14; i++) {
+    const s = Math.min(1, maxDim / Math.max(canvas.width, canvas.height));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(canvas.width * s)); c.height = Math.max(1, Math.round(canvas.height * s));
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(canvas, 0, 0, c.width, c.height);
+    out = c.toDataURL('image/jpeg', q);
+    if (out.length < 225000) return out;
+    if (q > 0.62) q -= 0.08; else maxDim *= 0.85;
+  }
+  return out;
+}
+function dataToCanvas(data) {
+  return new Promise((res) => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); res(c); }; img.src = data; });
+}
+async function addFiles(files) {
+  for (const f of files) {
+    if (!f || !f.type.startsWith('image/')) { toast('請選擇圖片檔'); continue; }
+    try { const c = await fileToCanvas(f); Q.photos.push({ id: uid('i'), data: compress(c), isNew: true }); }
+    catch (e) { toast('這張照片讀不出來，請換一張'); }
+  }
+  renderPhotos();
+}
+$('#inCamera').addEventListener('change', (e) => { addFiles([...e.target.files]); e.target.value = ''; });
+$('#inAlbum').addEventListener('change', (e) => { addFiles([...e.target.files]); e.target.value = ''; });
+document.addEventListener('paste', (e) => {
+  if ($('#sheetQ').classList.contains('hidden')) return;
+  const items = [...(e.clipboardData?.items || [])].filter(i => i.type.startsWith('image/'));
+  if (items.length) { e.preventDefault(); addFiles(items.map(i => i.getAsFile())); toast('已貼上截圖'); }
+});
+
+/* 裁切 */
+const cv = $('#cropCanvas');
+let C = null; // {index, src(canvas), sel, drag, start}
+async function openCrop(i) {
+  C = { index: i, src: await dataToCanvas(Q.photos[i].data), sel: null, drag: false };
+  openSheet('sheetCrop'); setupCrop();
+}
+function setupCrop() {
+  const area = $('#cropArea').getBoundingClientRect();
+  const s = Math.min(1, (area.width - 24) / C.src.width, (area.height - 24) / C.src.height);
+  cv.width = Math.max(1, Math.round(C.src.width * s)); cv.height = Math.max(1, Math.round(C.src.height * s));
+  C.sel = null; drawCrop();
+}
+function drawCrop() {
+  const x = cv.getContext('2d'); x.clearRect(0, 0, cv.width, cv.height); x.drawImage(C.src, 0, 0, cv.width, cv.height);
+  const s = C.sel;
+  if (s && s.w > 0 && s.h > 0) {
+    x.fillStyle = 'rgba(0,0,0,.55)'; x.fillRect(0, 0, cv.width, cv.height);
+    const k = C.src.width / cv.width;
+    x.drawImage(C.src, s.x * k, s.y * k, s.w * k, s.h * k, s.x, s.y, s.w, s.h);
+    x.strokeStyle = '#34d399'; x.lineWidth = 2.5; x.setLineDash([7, 4]); x.strokeRect(s.x, s.y, s.w, s.h); x.setLineDash([]);
+  }
+}
+function cpos(e) { const r = cv.getBoundingClientRect(); return { x: Math.max(0, Math.min(cv.width, (e.clientX - r.left) * cv.width / r.width)), y: Math.max(0, Math.min(cv.height, (e.clientY - r.top) * cv.height / r.height)) }; }
+cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); C.drag = true; C.start = cpos(e); C.sel = { x: C.start.x, y: C.start.y, w: 0, h: 0 }; drawCrop(); });
+cv.addEventListener('pointermove', (e) => { if (!C?.drag) return; const p = cpos(e); C.sel = { x: Math.min(C.start.x, p.x), y: Math.min(C.start.y, p.y), w: Math.abs(p.x - C.start.x), h: Math.abs(p.y - C.start.y) }; drawCrop(); });
+const cEnd = () => { if (!C) return; C.drag = false; if (C.sel && (C.sel.w < 12 || C.sel.h < 12)) { C.sel = null; drawCrop(); } };
+cv.addEventListener('pointerup', cEnd); cv.addEventListener('pointercancel', cEnd);
+function cropRegion() {
+  const s = C.sel; if (!s) return C.src;
+  const k = C.src.width / cv.width; const c = document.createElement('canvas');
+  c.width = Math.round(s.w * k); c.height = Math.round(s.h * k);
+  c.getContext('2d').drawImage(C.src, s.x * k, s.y * k, s.w * k, s.h * k, 0, 0, c.width, c.height);
+  return c;
+}
+function replacePhoto(i, canvas) {
+  const old = Q.photos[i]; if (!old.isNew) Q.removed.push(old.id);
+  Q.photos[i] = { id: uid('i'), data: compress(canvas), isNew: true };
+}
+$('#cropRotate').addEventListener('click', () => {
+  const c = document.createElement('canvas'); c.width = C.src.height; c.height = C.src.width;
+  const x = c.getContext('2d'); x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(C.src, 0, 0);
+  C.src = c; C.rotated = true; setupCrop();
+});
+$('#cropReset').addEventListener('click', () => { C.sel = null; drawCrop(); });
+$('#cropSplit').addEventListener('click', () => {
+  if (!C.sel) { toast('先用手指框出一塊範圍'); return; }
+  Q.photos.splice(C.index + 1, 0, { id: uid('i'), data: compress(cropRegion()), isNew: true });
+  C.sel = null; drawCrop(); renderPhotos(); toast('已另存成新的一張，可以繼續框');
+});
+$('#cropDone').addEventListener('click', () => {
+  if (C.sel || C.rotated) replacePhoto(C.index, cropRegion());
+  C = null; closeSheet('sheetCrop'); renderPhotos();
+});
+$('#cropCancel').addEventListener('click', () => { C = null; closeSheet('sheetCrop'); });
+window.addEventListener('resize', () => { if (C && !$('#sheetCrop').classList.contains('hidden')) setupCrop(); });
+
+/* AI 辨識 */
+let aiCtl = null;
+$('#btnAI').addEventListener('click', async () => {
+  if (aiCtl) { aiCtl.abort(); return; }
+  if (!Q.photos.length || Q.photos.some(p => !p.data)) { toast('先拍下題目照片'); return; }
+  const btn = $('#btnAI'), st = $('#aiStatus');
+  aiCtl = new AbortController(); btn.textContent = '停止'; st.innerHTML = '<span class="spin"></span> 正在看照片並整理，約需 20–60 秒…';
+  const existing = [...TPL.map(t => `${t.id}｜${t.chLabel}｜${tplTitle(t)}`), ...conceptList().filter(c => !TPLMAP[c.id]).map(c => `${c.id}｜${c.category || ''}｜${c.title}`)].join('\n');
+  const prompt = `你是台灣高中物理老師，正在幫學生整理錯題本。附上的 ${Q.photos.length} 張照片是同一道錯題（可能含圖表）。
+學生填寫：我的答案「${$('#qWrong').value.trim() || '未填'}」，正確答案「${$('#qCorrect').value.trim() || '未填'}」。
+
+課本（高一必修物理）的大觀念清單與學生自訂的大觀念（id｜章節｜名稱），請優先從中選一個最符合的：
+${existing}
+
+請只回傳一個 JSON 物件，不要其他文字：
+{
+ "stem": "題目文字與全部選項，照原文抄寫，數學式用 $...$ 的 LaTeX；圖表不必描述，寫「（見附圖）」即可",
+ "conceptId": "從上面清單選最符合的 id（題目在問實驗設計、變因、作圖、誤差時，選探究實作的 id）；真的都不適合才填 null",
+ "newConcept": {"category": "簡短分類，如「電磁感應」", "title": "大觀念名稱，一句話", "conceptPoints": ["1 到 3 條核心定律或公式，用 $...$"]} 或 null（有 conceptId 時填 null）,
+ "correctAns": "正確答案；學生已填就沿用，否則自行解出，不確定就填空字串",
+ "explanation": "簡潔詳解，3 到 6 句，指出學生可能錯在哪，用 $...$",
+ "errType": "從 ${ERR_TYPES.join('、')} 中選一個最可能的，無法判斷填空字串",
+ "memoryPoint": "一句好記的重點或口訣",
+ "source": "照片上看得到的出處或題號，看不到就填空字串"
+}
+全部使用繁體中文。`;
+  try {
+    const r = await S.sample.json(prompt, { images: Q.photos.map(p => dataUrlToBlob(p.data)), signal: aiCtl.signal, cache: false });
+    applyAI(r || {});
+    st.textContent = 'AI 已填入草稿（標示 AI 的欄位），請核對答案與詳解再儲存。';
+  } catch (e) {
+    const m = { cancelled: '已停止。', not_granted: '沒有允許使用 Claude，AI 功能無法使用；仍可手動填寫。', rate_limited: '使用太頻繁或已達用量上限，請稍後再試。', image_rejected: '照片無法辨識，請換一張清楚一點的。', refused: 'AI 無法處理這張照片，請手動填寫。', invalid_json: 'AI 回覆格式不對，請再按一次。', images_unavailable: '這個畫面無法把照片傳給 AI。', session_expired: '登入已過期，請重新登入。' };
+    st.textContent = m[e?.code] || 'AI 暫時無法使用，請稍後再試，或直接手動填寫。';
+    if (['not_granted', 'sampling_disabled', 'images_unavailable', 'capability_disabled'].includes(e?.code)) $('#aiBox').classList.add('hidden');
+  } finally { aiCtl = null; btn.textContent = 'AI 辨識並整理'; }
+});
+function setIfEmpty(sel, val) { const el = $(sel); if (val && !el.value.trim()) { el.value = String(val); return true; } return false; }
+function applyAI(r) {
+  setIfEmpty('#qStem', r.stem); setIfEmpty('#qCorrect', r.correctAns); setIfEmpty('#qExp', r.explanation);
+  setIfEmpty('#qMem', r.memoryPoint); setIfEmpty('#qSource', r.source);
+  if (r.errType && ERR_TYPES.includes(r.errType) && !Q.errType) { Q.errType = r.errType; renderErrTypes(); }
+  const sel = $('#qConcept');
+  if (!sel.value || sel.value === '__new') {
+    if (r.conceptId && (S.concepts[r.conceptId] || TPLMAP[r.conceptId])) { sel.value = r.conceptId; }
+    else if (r.newConcept && r.newConcept.title) {
+      sel.value = '__new';
+      if (!$('#ncCat').value.trim()) $('#ncCat').value = r.newConcept.category || '';
+      if (!$('#ncTitle').value.trim()) $('#ncTitle').value = r.newConcept.title;
+      Q.aiConceptPoints = Array.isArray(r.newConcept.conceptPoints) ? r.newConcept.conceptPoints.map(String).slice(0, 5) : null;
+    }
+    syncNewConcept();
+  }
+  refreshPreviews($('#sheetQ'));
+}
+
+/* 儲存錯題 */
+async function saveQuestion() {
+  const sel = $('#qConcept').value;
+  if (!Q.photos.length && !$('#qStem').value.trim()) { toast('請拍下題目照片，或輸入題目文字'); return; }
+  if (!sel) { toast('請選擇要歸入的大觀念'); $('#qConcept').focus(); return; }
+  if (sel === '__new' && (!$('#ncCat').value.trim() || !$('#ncTitle').value.trim())) { toast('請填新大觀念的分類與名稱'); $('#ncCat').focus(); return; }
+  if (Q.photos.some(p => !p.data)) { toast('照片還在載入，請稍候'); return; }
+  const btns = [$('#sqSave'), $('#sqSave2')]; btns.forEach(b => b.disabled = true);
+  try {
+    let cid = sel;
+    if (sel === '__new') {
+      const top = conceptList()[0];
+      const c = { id: uid('c'), category: $('#ncCat').value.trim(), title: $('#ncTitle').value.trim(), conceptPoints: Q.aiConceptPoints || [], memoryPoints: [], order: Math.max(Date.now(), (top?.order || 0) + 1), createdAt: Date.now() };
+      if (!await store.putConcept(c)) return;
+      cid = c.id;
+    }
+    if (!S.concepts[cid] && TPLMAP[cid]) { if (!await store.putConcept(tplConcept(cid))) return; }
+    for (const p of Q.photos) if (p.isNew) { if (!await store.putImage(p.id, p.data)) return; }
+    const old = Q.questionId ? S.questions[Q.questionId] : null;
+    const sib = questionsOf(cid);
+    const q = Object.assign({}, old || { id: uid('q'), createdAt: Date.now(), mastered: false, reviewCount: 0 }, {
+      conceptId: cid, source: $('#qSource').value.trim(), wrongAns: $('#qWrong').value.trim(), correctAns: $('#qCorrect').value.trim(),
+      errType: Q.errType, isMiscorrected: $('#qMis').checked, stem: $('#qStem').value.trim(), explanation: $('#qExp').value.trim(),
+      images: Q.photos.map(p => p.id), updatedAt: Date.now()
+    });
+    if (!old || old.conceptId !== cid) q.order = sib.length ? Math.max(...sib.map(s => s.order || 0)) + 1 : Date.now();
+    if (!await store.putQuestion(q)) return;
+    for (const id of Q.removed) await store.delImage(id);
+    const mem = $('#qMem').value.trim();
+    if (mem && !old) { const c = Object.assign({}, S.concepts[cid]); c.memoryPoints = [...(c.memoryPoints || []), mem]; await store.putConcept(c); }
+    S.open.add(cid);
+    closeSheet('sheetQ');
+    toast(old ? '已儲存修改' : '已收進錯題本');
+    if (S.view !== 'Book') setView('Book');
+    setTimeout(() => document.getElementById('card-' + cid)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  } finally { btns.forEach(b => b.disabled = false); }
+}
+$('#sqSave').addEventListener('click', saveQuestion);
+$('#sqSave2').addEventListener('click', saveQuestion);
+
+/* =====================================================================
+   7. 大觀念面板
+   ===================================================================== */
+let editingC = null;
+function openConceptSheet(id) {
+  editingC = id; const c = id ? getConcept(id) : null;
+  $('#scTitle').textContent = c ? '編輯大觀念' : '新增大觀念';
+  $('#cCat').value = c?.category || (S.filter !== 'ALL' ? S.filter : ''); $('#cTitle').value = c?.title || '';
+  $('#cPoints').value = (c?.conceptPoints || []).join('\n'); $('#cMem').value = (c?.memoryPoints || []).join('\n');
+  refreshPreviews($('#sheetC')); openSheet('sheetC');
+}
+$('#scCancel').addEventListener('click', () => closeSheet('sheetC'));
+$('#scSave').addEventListener('click', async () => {
+  if (!$('#cCat').value.trim() || !$('#cTitle').value.trim()) { toast('請填分類與大觀念名稱'); return; }
+  const base = editingC ? getConcept(editingC) : null;
+  const top = conceptList()[0];
+  const c = Object.assign({}, base || { id: uid('c'), order: Math.max(Date.now(), (top?.order || 0) + 1), createdAt: Date.now() }, {
+    category: $('#cCat').value.trim(), title: $('#cTitle').value.trim(), conceptPoints: lines($('#cPoints').value), memoryPoints: lines($('#cMem').value), updatedAt: Date.now()
+  });
+  closeSheet('sheetC'); S.open.add(c.id);
+  await store.putConcept(c); toast(base ? '已儲存' : '已新增大觀念');
+});
+
+/* =====================================================================
+   8. 複習（一題一題自我測驗）
+   ===================================================================== */
+function reviewPool(includeMastered) {
+  let qs = Object.values(S.questions).filter(q => S.concepts[q.conceptId]);
+  if (S.reviewCat && S.reviewCat !== 'ALL') qs = qs.filter(q => S.concepts[q.conceptId].category === S.reviewCat);
+  if (!includeMastered) qs = qs.filter(q => !q.mastered);
+  return qs.sort((a, b) => (a.lastReviewedAt || 0) - (b.lastReviewedAt || 0));
+}
+function renderReviewStart() {
+  const v = $('#viewReview');
+  const cats = categories();
+  if (S.reviewCat && S.reviewCat !== 'ALL' && !cats.includes(S.reviewCat)) S.reviewCat = 'ALL';
+  const cur = S.reviewCat || 'ALL';
+  const pool = reviewPool(false), all = reviewPool(true);
+  const chip = (val, l) => `<button type="button" class="chip ${cur === val ? 'on' : ''}" data-act="revCat" data-val="${esc(val)}">${esc(l)}</button>`;
+  v.innerHTML = `<div class="welcome">
+    <h2>自我測驗</h2>
+    <p class="muted" style="margin:0 0 12px;font-size:14px">一次出一題，先自己想，再看答案。會了就標記掌握，還不會的下次會再出現。最久沒複習的題目會先出。</p>
+    <div class="chips" style="margin-bottom:12px">${chip('ALL', '全部')}${cats.map(c => chip(c, c)).join('')}</div>
+    <div class="stack">
+      <button type="button" class="btn green block" data-act="revStart" ${pool.length ? '' : 'disabled'}>開始複習未掌握的 ${pool.length} 題</button>
+      <label class="toggle" for="revAll" style="justify-content:center"><input type="checkbox" id="revAll">連已掌握的也一起考（共 ${all.length} 題）</label>
+    </div>
+    ${!all.length ? '<p class="hint" style="text-align:center;margin-top:10px">還沒有錯題，先按下方「拍錯題」。</p>' : ''}
+  </div>`;
+}
+function startReview() {
+  const pool = reviewPool($('#revAll')?.checked);
+  if (!pool.length) { toast('沒有可以複習的題目'); return; }
+  S.review = { ids: pool.map(q => q.id), i: 0, shown: false, ok: 0, again: 0 };
+  renderReviewCard();
+}
+function renderReviewCard() {
+  const R = S.review, v = $('#viewReview');
+  while (R.i < R.ids.length && !S.questions[R.ids[R.i]]) R.i++;
+  if (R.i >= R.ids.length) {
+    v.innerHTML = `<div class="welcome done"><b>🎉</b><h2>這一輪完成</h2><p class="muted">會了 ${R.ok} 題・還要再練 ${R.again} 題</p>
+      <div class="stack" style="margin-top:14px"><button type="button" class="btn green block" data-act="revEnd">回到複習首頁</button></div></div>`;
+    return;
+  }
+  const q = S.questions[R.ids[R.i]], c = S.concepts[q.conceptId] || {};
+  v.innerHTML = `<div class="rev-top"><span class="mono" style="font-weight:700">${R.i + 1} / ${R.ids.length}</span><div class="bar"><i style="width:${(R.i / R.ids.length) * 100}%"></i></div><button type="button" class="link-btn" data-act="revEnd">結束</button></div>
+    <div class="flash">
+      <div class="fh"><span class="pill">${esc(c.category || '')}</span> <b>${esc(c.title || '')}</b></div>
+      <div class="fb"><div class="q-top">${q.source ? `<span class="tag">${esc(q.source)}</span>` : ''}${q.reviewCount ? `<span class="tag">已複習 ${q.reviewCount} 次</span>` : ''}</div>
+        ${figsHtml(q)}${q.stem ? `<div class="stem rich">${rich(q.stem)}</div>` : ''}</div>
+      ${R.shown ? `<div class="back">
+        <div class="q-top">${q.wrongAns ? `<span class="tag wrong">上次選 <span class="mono">${esc(q.wrongAns)}</span></span>` : ''}${q.errType ? `<span class="tag type">${esc(q.errType)}</span>` : ''}${q.isMiscorrected ? '<span class="tag warn">訂正時改錯過</span>' : ''}</div>
+        <div class="answer" style="margin-top:0"><div class="ans">正確答案：<span class="mono">${esc(q.correctAns || '（未填）')}</span></div>${q.explanation ? `<p class="rich">${rich(q.explanation)}</p>` : '<p class="muted">還沒寫訂正，記得補上。</p>'}</div>
+        ${(c.memoryPoints || []).length ? `<div style="margin-top:10px;background:var(--memory-bg);border:1px solid #ebcf94;border-radius:10px;padding:9px 12px"><ul class="mem">${c.memoryPoints.map(m => `<li><span class="rich">${rich(m)}</span></li>`).join('')}</ul></div>` : ''}
+      </div>` : ''}
+    </div>
+    ${R.shown ? `<div class="rev-btns"><button type="button" class="btn" data-act="revGrade" data-val="again">還不會</button><button type="button" class="btn green" data-act="revGrade" data-val="ok">會了 ✓</button></div>`
+      : `<div class="stack" style="margin-top:12px"><button type="button" class="btn primary block" data-act="revShow">想好了，看答案</button></div>`}`;
+  typeset(v); hydrateImages(v); window.scrollTo(0, 0);
+}
+async function gradeReview(ok) {
+  const R = S.review; const q = S.questions[R.ids[R.i]];
+  if (q) {
+    const n = Object.assign({}, q, { reviewCount: (q.reviewCount || 0) + 1, lastReviewedAt: Date.now(), mastered: ok ? true : false, updatedAt: Date.now() });
+    store.putQuestion(n);
+  }
+  ok ? R.ok++ : R.again++;
+  R.i++; R.shown = false; renderReviewCard();
+}
+
+/* =====================================================================
+   9. 範例、列印、備份
+   ===================================================================== */
+async function saveFile(filename, data, mime) {
+  if (S.downloads) {
+    try { await S.downloads.save({ filename, data }); return true; }
+    catch (e) { toast(e?.code === 'declined' ? '已取消下載' : '無法下載：' + (e?.code || '未知錯誤')); return false; }
+  }
+  try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: mime })); a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); return true; }
+  catch (e) { toast('這個畫面不支援下載'); return false; }
+}
+$('#btnPrint').addEventListener('click', async () => {
+  if (!Object.keys(S.concepts).length) { toast('還沒有錯題可以列印'); return; }
+  const b = $('#btnPrint'); b.disabled = true; b.innerHTML = '<span class="spin"></span> 準備中…';
+  try {
+    const mode = $('input[name="pmode"]:checked').value, skip = $('#pSkip').checked;
+    const data = visibleData(); const imgs = {};
+    for (const { qs } of data) for (const q of qs) for (const id of (q.images || [])) imgs[id] = await store.getImage(id);
+    if (await saveFile(`錯題本${mode === 'practice' ? '_練習版' : ''}_${today()}.html`, buildPrintHtml(data, imgs, mode, skip), 'text/html')) toast('已下載，用瀏覽器開啟就能列印');
+  } finally { b.disabled = false; b.textContent = '下載列印版'; }
+});
+function buildPrintHtml(data, imgs, mode, skip) {
+  const practice = mode === 'practice';
+  const cards = data.map(({ c, qs }) => {
+    const list = skip ? qs.filter(q => !q.mastered) : qs;
+    const qh = list.map((q, i) => `<div class="q"><div class="qh"><b class="no">第 ${i + 1} 題</b>${q.source ? `<span>${esc(q.source)}</span>` : ''}${!practice && q.wrongAns ? `<span class="w">原選：${esc(q.wrongAns)}</span>` : ''}${!practice && q.errType ? `<span>${esc(q.errType)}</span>` : ''}</div>
+      ${(q.images || []).map(id => imgs[id] ? `<div class="fig"><img src="${esc(imgs[id])}" alt=""></div>` : '').join('')}${q.stem ? `<div>${rich(q.stem)}</div>` : ''}
+      ${practice ? '<div class="blank">我的作答：＿＿＿＿＿＿　關鍵想法：</div>' : `<div class="ans"><b>正確答案：${esc(q.correctAns || '')}</b><div>${rich(q.explanation || '')}</div></div>`}</div>`).join('');
+    return `<section class="card"><div class="t1"><div class="lab">【觀念】<span class="cat">${esc(c.category || '')}</span></div><h2>${esc(c.title)}</h2><ol>${(c.conceptPoints || []).map(p => `<li>${rich(p)}</li>`).join('')}</ol></div>
+      <div class="t2"><div class="lab">【題目】</div>${qh || '<p>（此範圍沒有題目）</p>'}</div>
+      ${practice ? '' : `<div class="t3"><div class="lab">【重點記憶點】</div><ul>${(c.memoryPoints || []).map(m => `<li>${rich(m)}</li>`).join('')}</ul></div>`}</section>`;
+  }).join('');
+  const K = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/';
+  return `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>大觀念錯題本 ${today()}</title>
+<link rel="stylesheet" href="${K}katex.min.css"><script defer src="${K}katex.min.js"><\/script><script defer src="${K}contrib/auto-render.min.js"><\/script>
+<style>@page{size:A4;margin:14mm 12mm}body{font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;color:#111;font-size:11pt;line-height:1.55;margin:0 auto;max-width:186mm}
+header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:12px}header h1{font-size:17pt;margin:0}header p{margin:0;font-size:9pt;color:#444}
+.card{border:2px solid #000;border-radius:8px;margin-bottom:14px;overflow:hidden}.card>div{padding:8px 12px}.card>div+div{border-top:2px solid #000}.t1{background:#f1f3fc}.t3{background:#fdf6e6}
+.lab{font-weight:900;font-size:10pt;letter-spacing:.06em;margin-bottom:4px}.cat{font-weight:700;margin-left:8px}h2{font-size:13pt;margin:0 0 4px}ol,ul{margin:0;padding-left:20px}
+.q{border:1px solid #999;border-radius:6px;padding:7px 9px;margin:6px 0;break-inside:avoid;page-break-inside:avoid}.qh{display:flex;flex-wrap:wrap;gap:8px;font-size:9pt;margin-bottom:4px}.qh .no{background:#000;color:#fff;padding:0 6px;border-radius:3px}.qh .w{color:#b00}
+.fig{text-align:center;margin:6px 0}.fig img{max-width:100%;max-height:95mm}.ans{background:#eef8f1;border:1px solid #9cc9a9;border-radius:5px;padding:5px 8px;margin-top:6px;font-size:10pt}
+.blank{margin-top:8px;border-top:1px dashed #999;padding-top:6px;min-height:24mm;font-size:10pt}strong{background:#fff2b3}
+.tip{font-size:10pt;background:#fff8e6;border:1px dashed #b88a2e;padding:6px 10px;border-radius:6px;margin-bottom:10px}@media print{.tip{display:none}}</style></head><body>
+<div class="tip">列印視窗沒有自動出現時，請按 Ctrl+P（Mac：⌘+P），目的地可選「另存為 PDF」。</div>
+<header><div><h1>大觀念主題式錯題本${practice ? '（練習版）' : ''}</h1><p>【觀念】→【題目】→【重點記憶點】</p></div><p>列印日期：${today()}<br>□ 一刷訂正　□ 二刷自測　□ 考前總複習</p></header>${cards}
+<script>window.addEventListener('load',function(){try{renderMathInElement(document.body,${JSON.stringify(MATH_OPTS)});}catch(e){}setTimeout(function(){window.print();},700);});<\/script></body></html>`;
+}
+$('#btnExport').addEventListener('click', async () => {
+  const b = $('#btnExport'); b.disabled = true; b.innerHTML = '<span class="spin"></span> 打包中…';
+  try {
+    const images = {};
+    for (const q of Object.values(S.questions)) for (const id of (q.images || [])) { const d = await store.getImage(id); if (d) images[id] = d; }
+    const json = JSON.stringify({ app: 'mistakebook', version: 2, exportedAt: new Date().toISOString(), concepts: Object.values(S.concepts), questions: Object.values(S.questions), images });
+    if (await saveFile(`錯題本備份_${today()}.json`, json, 'application/json')) toast('已下載備份');
+  } finally { b.disabled = false; b.textContent = '下載備份'; }
+});
+$('#fileImport').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let d; try { d = JSON.parse(await f.text()); } catch (err) { toast('讀不懂這個檔案'); return; }
+  if (!d || d.app !== 'mistakebook' || !Array.isArray(d.concepts) || !Array.isArray(d.questions)) { toast('這不是錯題本的備份檔'); return; }
+  if (!await confirmDlg('匯入備份？', `將加入 ${d.concepts.length} 個大觀念、${d.questions.length} 道錯題；同編號的會被覆蓋。`, '匯入')) return;
+  toast('匯入中…');
+  for (const [id, data] of Object.entries(d.images || {})) if (typeof data === 'string' && data.startsWith('data:image/')) await store.putImage(id, data);
+  for (const c of d.concepts) if (c?.id) await store.putConcept(c);
+  for (const q of d.questions) if (q?.id) await store.putQuestion(q);
+  toast(`已匯入 ${d.concepts.length} 個大觀念`); setView('Book');
+});
+
+/* =====================================================================
+   10. 啟動
+   ===================================================================== */
+render();
+initBackend();
+</script>
+</body>
+</html>
