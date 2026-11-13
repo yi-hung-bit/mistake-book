@@ -182,6 +182,7 @@ textarea.in{resize:vertical;line-height:1.55}
 .ai .box-t{color:#4a2fa0}
 .ai-status{font-size:13px;color:#4a2fa0;margin-top:6px;white-space:pre-wrap}
 .ai-badge{font-size:11px;font-weight:700;background:#5b3fb3;color:#fff;border-radius:6px;padding:0 6px;margin-left:6px}
+.gem{border:2px solid #1a73e8;background:#f2f7ff}.gem .box-t{color:#174ea6}.gem-step{display:flex;gap:10px;align-items:flex-start}.gem-step>b{flex:none;width:24px;height:24px;border-radius:50%;background:#1a73e8;color:#fff;display:grid;place-items:center;font-size:13px;margin-top:4px}
 .chk{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:700}
 .chk input{width:18px;height:18px}
 
@@ -274,7 +275,7 @@ textarea.in{resize:vertical;line-height:1.55}
     </div>
     <div class="item">
       <h3>使用方式</h3>
-      <p>1. 按底部綠色「拍錯題」，拍下題目（圖表一起拍進去）。<br>2. 可裁切、旋轉；圖表在另一頁就再拍一張。<br>3. 選這題屬於課本哪一節；或按「AI 辨識並整理」，自動抄題、判斷章節、寫出詳解草稿。<br>4. 「複習」頁會一題一題考你，答對的標記為已掌握。</p>
+      <p>1. 按底部綠色「拍錯題」，拍下題目（圖表一起拍進去）。<br>2. 可裁切、旋轉；圖表在另一頁就再拍一張。<br>3. 選這題屬於課本哪一節；或用「用 Gemini 辨識」（學校 Google 帳號），自動抄題、判斷章節、寫出詳解草稿。<br>4. 「複習」頁會一題一題考你，答對的標記為已掌握。</p>
       <p>每個人看到的是自己的錯題本，其他人看不到。</p>
     </div>
   </div>
@@ -315,6 +316,22 @@ textarea.in{resize:vertical;line-height:1.55}
         <button class="btn primary block" type="button" id="btnAI">AI 辨識並整理</button>
         <div class="ai-status" id="aiStatus">會抄下題目、建議歸到哪個大觀念、寫出詳解與記憶點草稿。結果請自己核對。</div>
       </div>
+
+      <details class="box gem" id="gemBox">
+        <summary class="box-t" style="cursor:pointer;margin:0">用 Gemini 辨識（學校 Google 帳號可用）</summary>
+        <div class="stack" style="margin-top:10px">
+          <div class="gem-step"><b>①</b><div><button class="btn sm" type="button" id="gemCopy">複製指令</button><p class="hint">指令裡已經包含課本章節清單。</p></div></div>
+          <div class="gem-step"><b>②</b><div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px"><button class="btn sm hidden" type="button" id="gemShare">把照片分享到 Gemini</button><a class="btn sm" style="text-decoration:none;color:var(--ink)" id="gemOpen" href="https://gemini.google.com/app" target="_blank" rel="noopener">開啟 Gemini</a></div>
+            <p class="hint">在 Gemini 貼上指令、附上這題的照片後送出。照片不在相簿的話，先長按上面的照片儲存。</p></div></div>
+          <div class="gem-step"><b>③</b><div style="flex:1;min-width:0">
+            <label class="f" for="gemReply">把 Gemini 的整段回覆貼在這裡</label>
+            <textarea class="in" id="gemReply" rows="3" placeholder="在 Gemini 回覆上按「複製」，再貼到這裡"></textarea>
+            <button class="btn sm primary" type="button" id="gemApply" style="margin-top:8px">填入錯題</button>
+            <div class="ai-status" id="gemStatus"></div></div></div>
+          <textarea class="in hidden" id="gemPrompt" rows="5" readonly aria-label="Gemini 指令"></textarea>
+        </div>
+      </details>
 
       <div class="box stack">
         <div>
@@ -855,6 +872,8 @@ function openQuestionSheet(conceptId, questionId, launchCamera) {
   }
   renderPhotos();
   $('#aiBox').classList.toggle('hidden', !(S.sample && S.sampleImages));
+  $('#gemBox').open = !(S.sample && S.sampleImages);
+  $('#gemReply').value = ''; $('#gemStatus').textContent = ''; $('#gemPrompt').classList.add('hidden');
   $('#aiStatus').textContent = '會抄下題目、建議歸到哪個大觀念、寫出詳解與記憶點草稿。結果請自己核對。';
   refreshPreviews($('#sheetQ'));
   openSheet('sheetQ');
@@ -980,20 +999,15 @@ $('#cropCancel').addEventListener('click', () => { C = null; closeSheet('sheetCr
 window.addEventListener('resize', () => { if (C && !$('#sheetCrop').classList.contains('hidden')) setupCrop(); });
 
 /* AI 辨識 */
-let aiCtl = null;
-$('#btnAI').addEventListener('click', async () => {
-  if (aiCtl) { aiCtl.abort(); return; }
-  if (!Q.photos.length || Q.photos.some(p => !p.data)) { toast('先拍下題目照片'); return; }
-  const btn = $('#btnAI'), st = $('#aiStatus');
-  aiCtl = new AbortController(); btn.textContent = '停止'; st.innerHTML = '<span class="spin"></span> 正在看照片並整理，約需 20–60 秒…';
+function buildPrompt(forGemini) {
   const existing = [...TPL.map(t => `${t.id}｜${t.chLabel}｜${tplTitle(t)}`), ...conceptList().filter(c => !TPLMAP[c.id]).map(c => `${c.id}｜${c.category || ''}｜${c.title}`)].join('\n');
-  const prompt = `你是台灣高中物理老師，正在幫學生整理錯題本。附上的 ${Q.photos.length} 張照片是同一道錯題（可能含圖表）。
+  return `你是台灣高中物理老師，正在幫學生整理錯題本。${forGemini ? '我會附上同一道錯題的照片（可能含圖表）。' : `附上的 ${Q.photos.length} 張照片是同一道錯題（可能含圖表）。`}
 學生填寫：我的答案「${$('#qWrong').value.trim() || '未填'}」，正確答案「${$('#qCorrect').value.trim() || '未填'}」。
 
 課本（高一必修物理）的大觀念清單與學生自訂的大觀念（id｜章節｜名稱），請優先從中選一個最符合的：
 ${existing}
 
-請只回傳一個 JSON 物件，不要其他文字：
+${forGemini ? '請只回傳一個 JSON 物件，放在 ```json 程式碼區塊中，不要其他文字。JSON 字串裡的 LaTeX 反斜線一律寫成兩個（例如 \\\\frac）。' : '請只回傳一個 JSON 物件，不要其他文字：'}
 {
  "stem": "題目文字與全部選項，照原文抄寫，數學式用 $...$ 的 LaTeX；圖表不必描述，寫「（見附圖）」即可",
  "conceptId": "從上面清單選最符合的 id（題目在問實驗設計、變因、作圖、誤差時，選探究實作的 id）；真的都不適合才填 null",
@@ -1005,6 +1019,15 @@ ${existing}
  "source": "照片上看得到的出處或題號，看不到就填空字串"
 }
 全部使用繁體中文。`;
+}
+
+let aiCtl = null;
+$('#btnAI').addEventListener('click', async () => {
+  if (aiCtl) { aiCtl.abort(); return; }
+  if (!Q.photos.length || Q.photos.some(p => !p.data)) { toast('先拍下題目照片'); return; }
+  const btn = $('#btnAI'), st = $('#aiStatus');
+  aiCtl = new AbortController(); btn.textContent = '停止'; st.innerHTML = '<span class="spin"></span> 正在看照片並整理，約需 20–60 秒…';
+  const prompt = buildPrompt(false);
   try {
     const r = await S.sample.json(prompt, { images: Q.photos.map(p => dataUrlToBlob(p.data)), signal: aiCtl.signal, cache: false });
     applyAI(r || {});
@@ -1033,6 +1056,45 @@ function applyAI(r) {
   }
   refreshPreviews($('#sheetQ'));
 }
+
+/* Gemini：複製指令 → 在 Gemini 貼上 → 回覆貼回來 */
+$('#gemCopy').addEventListener('click', async () => {
+  if (!Q.photos.length) toast('記得先拍好題目照片');
+  const text = buildPrompt(true);
+  const ta = $('#gemPrompt'); ta.value = text;
+  try { await navigator.clipboard.writeText(text); ta.classList.add('hidden'); $('#gemStatus').textContent = '指令已複製，到 Gemini 貼上並附上照片。'; }
+  catch (e) { ta.classList.remove('hidden'); ta.focus(); ta.select(); $('#gemStatus').textContent = '無法自動複製：請長按下方文字框 → 全選 → 拷貝。'; }
+});
+try {
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([new Blob(['x'], { type: 'image/jpeg' })], 'a.jpg', { type: 'image/jpeg' })] })) $('#gemShare').classList.remove('hidden');
+} catch (e) {}
+$('#gemShare').addEventListener('click', async () => {
+  if (!Q.photos.length) { toast('先拍好題目照片'); return; }
+  const files = Q.photos.filter(p => p.data).map((p, i) => new File([dataUrlToBlob(p.data)], `錯題${i + 1}.jpg`, { type: 'image/jpeg' }));
+  try { await navigator.share({ files }); }
+  catch (e) { if (e?.name !== 'AbortError') toast('這個瀏覽器不能分享照片，請先長按照片儲存'); }
+});
+function parseLooseJSON(text) {
+  let t = String(text || '').trim();
+  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i); if (fence) t = fence[1];
+  const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0 || b <= a) throw new Error('no json');
+  t = t.slice(a, b + 1);
+  try { return JSON.parse(t); } catch (e) {}
+  t = t.replace(/[“”]/g, '"')
+       .replace(/(^|[^\\])\\(?!u[0-9a-fA-F]{4})([a-zA-Z]{2,})/g, '$1\\\\$2')
+       .replace(/(^|[^\\])\\(?!u[0-9a-fA-F]{4})([a-zA-Z]{2,})/g, '$1\\\\$2')
+       .replace(/(^|[^\\])\\([^"\\\/bfnrtu])/g, '$1\\\\$2');
+  return JSON.parse(t);
+}
+$('#gemApply').addEventListener('click', () => {
+  const raw = $('#gemReply').value;
+  if (!raw.trim()) { toast('先把 Gemini 的回覆貼進來'); return; }
+  try {
+    applyAI(parseLooseJSON(raw));
+    $('#gemStatus').textContent = '已填入草稿，請核對章節、答案與詳解再儲存。';
+    toast('已填入 Gemini 的結果');
+  } catch (e) { $('#gemStatus').textContent = '讀不懂這段回覆。請確認有複製到 Gemini 的整段回覆（含大括號 { }），或請 Gemini「只輸出 JSON」再試一次。'; }
+});
 
 /* 儲存錯題 */
 async function saveQuestion() {
