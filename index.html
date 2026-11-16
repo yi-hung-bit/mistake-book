@@ -337,6 +337,7 @@ textarea.in{resize:vertical;line-height:1.55}
         <div>
           <span class="f" style="display:block;font-size:13px;font-weight:700;margin-bottom:6px">錯因</span>
           <div class="choice" id="qType"></div>
+          <input class="in hidden" id="qTypeOther" style="margin-top:8px" maxlength="30" placeholder="寫下錯因，例如：單位換算忘記" aria-label="其他錯因">
         </div>
         <label class="chk" for="qMis" style="color:var(--bad)"><input type="checkbox" id="qMis" style="accent-color:var(--bad)">原本寫對，訂正時改錯了</label>
       </div>
@@ -353,7 +354,7 @@ textarea.in{resize:vertical;line-height:1.55}
         </div>
         <div>
           <label class="f" for="qStem">題目文字（選填，照片看得清楚就不用打）</label>
-          <textarea class="in" id="qStem" rows="3" placeholder="可讓 AI 辨識，或自己打"></textarea>
+          <textarea class="in" id="qStem" rows="3" placeholder="照片看不清楚的部分，可以自己打字補上"></textarea>
           <div class="preview rich" data-preview-of="qStem"></div>
         </div>
       </div>
@@ -833,14 +834,22 @@ function syncNewConcept() { $('#newConceptFields').classList.toggle('hidden', $(
 $('#qConcept').addEventListener('change', syncNewConcept);
 
 function renderErrTypes() {
-  $('#qType').innerHTML = ERR_TYPES.map(t => `<button type="button" class="${Q.errType === t ? 'on' : ''}" data-et="${esc(t)}">${esc(t)}</button>`).join('');
+  $('#qType').innerHTML = ERR_TYPES.map(t => `<button type="button" class="${!Q.otherOn && Q.errType === t ? 'on' : ''}" data-et="${esc(t)}">${esc(t)}</button>`).join('')
+    + `<button type="button" class="${Q.otherOn ? 'on' : ''}" data-et="__other">其他</button>`;
+  $('#qTypeOther').classList.toggle('hidden', !Q.otherOn);
 }
-$('#qType').addEventListener('click', (e) => { const b = e.target.closest('[data-et]'); if (!b) return; Q.errType = Q.errType === b.dataset.et ? '' : b.dataset.et; renderErrTypes(); });
+$('#qType').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-et]'); if (!b) return;
+  if (b.dataset.et === '__other') { Q.otherOn = !Q.otherOn; Q.errType = ''; renderErrTypes(); if (Q.otherOn) $('#qTypeOther').focus(); return; }
+  Q.otherOn = false; Q.errType = Q.errType === b.dataset.et ? '' : b.dataset.et; renderErrTypes();
+});
 
 function openQuestionSheet(conceptId, questionId, launchCamera) {
   if (!ready()) { toast('還在載入，請稍候'); return; }
   const q = questionId ? S.questions[questionId] : null;
-  Q = { questionId: questionId || null, photos: [], removed: [], errType: q?.errType || '', aiConceptPoints: null };
+  const custom = !!(q?.errType && !ERR_TYPES.includes(q.errType));
+  Q = { questionId: questionId || null, photos: [], removed: [], errType: custom ? '' : (q?.errType || ''), otherOn: custom, aiConceptPoints: null };
+  $('#qTypeOther').value = custom ? q.errType : '';
   $('#sqTitle').textContent = q ? '編輯錯題' : '新錯題';
   fillConceptSelect(conceptId || q?.conceptId || '');
   $('#ncCat').value = S.filter !== 'ALL' ? S.filter : ''; $('#ncTitle').value = '';
@@ -1019,7 +1028,7 @@ function setIfEmpty(sel, val) { const el = $(sel); if (val && !el.value.trim()) 
 function applyAI(r) {
   setIfEmpty('#qStem', r.stem); setIfEmpty('#qCorrect', r.correctAns); setIfEmpty('#qExp', r.explanation);
   setIfEmpty('#qMem', r.memoryPoint); setIfEmpty('#qSource', r.source);
-  if (r.errType && ERR_TYPES.includes(r.errType) && !Q.errType) { Q.errType = r.errType; renderErrTypes(); }
+  if (r.errType && ERR_TYPES.includes(r.errType) && !Q.errType && !Q.otherOn) { Q.errType = r.errType; renderErrTypes(); }
   const sel = $('#qConcept');
   if (!sel.value || sel.value === '__new') {
     if (r.conceptId && (S.concepts[r.conceptId] || TPLMAP[r.conceptId])) { sel.value = r.conceptId; }
@@ -1056,7 +1065,7 @@ async function saveQuestion() {
     const sib = questionsOf(cid);
     const q = Object.assign({}, old || { id: uid('q'), createdAt: Date.now(), mastered: false, reviewCount: 0 }, {
       conceptId: cid, source: $('#qSource').value.trim(), wrongAns: $('#qWrong').value.trim(), correctAns: $('#qCorrect').value.trim(),
-      errType: Q.errType, isMiscorrected: $('#qMis').checked, stem: $('#qStem').value.trim(), explanation: $('#qExp').value.trim(),
+      errType: Q.otherOn ? $('#qTypeOther').value.trim() : Q.errType, isMiscorrected: $('#qMis').checked, stem: $('#qStem').value.trim(), explanation: $('#qExp').value.trim(),
       images: Q.photos.map(p => p.id), updatedAt: Date.now()
     });
     if (!old || old.conceptId !== cid) q.order = sib.length ? Math.max(...sib.map(s => s.order || 0)) + 1 : Date.now();
